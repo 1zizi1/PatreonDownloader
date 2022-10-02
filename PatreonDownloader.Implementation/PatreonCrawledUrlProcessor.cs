@@ -58,6 +58,13 @@ namespace PatreonDownloader.Implementation
         {
             PatreonCrawledUrl crawledUrl = (PatreonCrawledUrl)udpCrawledUrl;
 
+            string downloadDirectory = "";
+
+            if (_patreonDownloaderSettings.IsUseSubDirectories &&
+                crawledUrl.UrlType != PatreonCrawledUrlType.AvatarFile &&
+                crawledUrl.UrlType != PatreonCrawledUrlType.CoverFile)
+                downloadDirectory = PostSubdirectoryHelper.CreateNameFromPattern(crawledUrl, _patreonDownloaderSettings.SubDirectoryPattern, _patreonDownloaderSettings.MaxSubdirectoryNameLength);
+
             if (crawledUrl.Url.IndexOf("youtube.com/watch?v=", StringComparison.Ordinal) != -1 ||
                      crawledUrl.Url.IndexOf("youtu.be/", StringComparison.Ordinal) != -1)
             {
@@ -68,10 +75,10 @@ namespace PatreonDownloader.Implementation
                     bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                     var youtubedlProcess = new Process
                     {
-                        StartInfo = 
+                        StartInfo =
                         {
                             FileName = $"yt-dlp{(isWindows ? ".exe" : "")}",
-                            Arguments = $"{crawledUrl.Url}",
+                            Arguments = $"{crawledUrl.Url} --format mp4 -o \"{downloadDirectory}/%(title)s.%(ext)s\"",
                             UseShellExecute = false,
                             CreateNoWindow = false,
                             RedirectStandardOutput = false
@@ -81,7 +88,7 @@ namespace PatreonDownloader.Implementation
 
                     // Make sure app has finished the work
                     youtubedlProcess.WaitForExit();
-                    
+
                     skipChecks = true;
                 } catch (Exception ex)
                 {
@@ -196,13 +203,6 @@ namespace PatreonDownloader.Implementation
                     filename = $"{Path.GetFileNameWithoutExtension(filename)}_{appendStr}{Path.GetExtension(filename)}";
                 }
             }
-
-            string downloadDirectory = "";
-
-            if (_patreonDownloaderSettings.IsUseSubDirectories && 
-                crawledUrl.UrlType != PatreonCrawledUrlType.AvatarFile &&
-                crawledUrl.UrlType != PatreonCrawledUrlType.CoverFile)
-                downloadDirectory = PostSubdirectoryHelper.CreateNameFromPattern(crawledUrl, _patreonDownloaderSettings.SubDirectoryPattern, _patreonDownloaderSettings.MaxSubdirectoryNameLength);
 
             crawledUrl.DownloadPath = !crawledUrl.IsProcessedByPlugin ? Path.Combine(downloadDirectory, filename) : downloadDirectory;
 
