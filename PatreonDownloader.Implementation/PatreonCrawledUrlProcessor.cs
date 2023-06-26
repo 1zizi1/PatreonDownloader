@@ -73,7 +73,7 @@ namespace PatreonDownloader.Implementation
                     _logger.Debug($"[{crawledUrl.PostId}] YOUTUBE link found: {crawledUrl.Url}");
 
                     bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                    var youtubedlProcess = new Process
+                    var youtubeProcess = new Process
                     {
                         StartInfo =
                         {
@@ -84,17 +84,16 @@ namespace PatreonDownloader.Implementation
                             RedirectStandardOutput = false
                         }
                     };
-                    youtubedlProcess.Start();
+                    youtubeProcess.Start();
 
                     // Make sure app has finished the work
-                    youtubedlProcess.WaitForExit();
-
-                    skipChecks = true;
-                } catch (Exception ex)
+                    youtubeProcess.WaitForExit();
+                }
+                catch (Exception ex)
                 {
                     _logger.Fatal($"[{crawledUrl.PostId}] Failed to download: {crawledUrl.Url}: {ex}");
-                    return false;
                 }
+                return false; // downloading is handled here
             }
             else if (crawledUrl.Url.IndexOf("imgur.com/", StringComparison.Ordinal) != -1)
             {
